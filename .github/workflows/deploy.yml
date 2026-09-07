@@ -1,5 +1,10 @@
-# 真身在 GitHub 远端（由 API 创建）；本地参考副本见 deploy/ci/deploy.workflow.yml。
-# 注意：本地修改本文件后 git push 需要带 workflow scope 的 token（gh CLI 已配置）。
+# 本文件是 .github/workflows/deploy.yml 的本地参考副本（真身在 GitHub 远端，由 API 创建）。
+# 本地修改 .github/ 下 workflow 后 git push 需要带 workflow scope 的 token
+# （GitHub OAuth App / Git Credential Manager 默认不含，会报 "without workflow scope"）。
+# 本机 gh CLI 已通过 device flow 配好全功能 token，更新远端可用：
+#   gh api -X PUT repos/swiftiejerry/SMBU-Schedule-Sync/contents/.github/workflows/deploy.yml \
+#     -f message=... -f content=<base64> -f branch=main -f sha=<旧blob sha>
+# 手动触发部署：gh workflow run deploy.yml -R swiftiejerry/SMBU-Schedule-Sync
 
 name: Deploy to Alibaba Cloud ECS
 
@@ -32,7 +37,9 @@ jobs:
           username: root
           key: ${{ secrets.ECS_DEPLOY_KEY }}
           source: smbu-src.tgz
-          target: /opt/smbu-src.tgz
+          # 注意：scp-action 的 target 是"目录"不是文件路径。手动部署时代曾把
+          # /opt/smbu-src.tgz 当文件传过，若 target 指向它，drone-scp 会 mkdir 失败。
+          target: /opt/
           overwrite: true
 
       - name: Deploy on ECS (cert + build image + recreate containers)
