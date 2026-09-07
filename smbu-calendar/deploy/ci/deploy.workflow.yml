@@ -1,3 +1,9 @@
+# 激活方式：将此文件移动到 .github/workflows/deploy.yml 后推送。
+# 注意：通过 git push 推送 workflow 文件需要具有 `workflow` scope 的 token
+# （GitHub OAuth App / Git Credential Manager 默认不含该 scope，会报
+# "without workflow scope" 拒绝）。可用 GitHub PAT(workflow+repo) 或
+# `gh auth login --scopes workflow` 解决；也可在 GitHub Web UI 直接创建该文件（不受此限制）。
+
 name: Deploy to Alibaba Cloud ECS
 
 on:
@@ -36,7 +42,7 @@ jobs:
           target: /opt/smbu-src.tgz
           overwrite: true
 
-      - name: Deploy on ECS (build image + recreate containers)
+      - name: Deploy on ECS (cert + build image + recreate containers)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.ECS_HOST }}
@@ -48,10 +54,8 @@ jobs:
             mkdir -p /opt/smbu-calendar
             tar xzf /opt/smbu-src.tgz -C /opt/smbu-calendar --strip-components=1
             cd /opt/smbu-calendar
-            SMBU_ALLOW_ORIGINS="https://swiftiejerry.xyz" \
-              docker compose -f deploy/docker-compose.yml build
-            SMBU_ALLOW_ORIGINS="https://swiftiejerry.xyz" \
-              docker compose -f deploy/docker-compose.yml up -d
-            sleep 5
-            curl -fsS http://127.0.0.1:8770/api/health && echo "HEALTH OK"
+            # deploy.sh 统一处理：阶段1 自签证书 + nginx.portal.conf（8443），
+            # 阶段2 加 LETSENCRYPT=1 走 Let's Encrypt + nginx.conf（443）。
+            # 直接调 deploy.sh 可避免 docker-compose 默认 NGINX_CONF=nginx.conf 的坑。
+            bash deploy/deploy.sh
             docker image prune -f
