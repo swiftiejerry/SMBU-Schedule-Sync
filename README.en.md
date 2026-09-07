@@ -18,6 +18,8 @@ Enter your CAS credentials → the server fetches any semester's timetable → d
 |---|---|
 | ![Timetable preview — light](docs/screenshots/timetable-light.png) | ![Timetable preview — dark](docs/screenshots/timetable-dark.png) |
 
+<sub>Sample: spring semester 2023–2024 (21 course blocks, captured from a real account; name and student ID hidden)</sub>
+
 Pick a semester → preview the full timetable → choose a pre-class reminder → download the `.ics` and import it. **Every semester since freshman year** is supported; re-importing a semester deduplicates and refreshes events automatically.
 
 ## 🚀 Features
