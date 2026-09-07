@@ -253,7 +253,7 @@ nginx 默认读 `./certs`。小机型（1 核 1G）足够几百在校生。
 ### GitHub 开源准备（已完成，待你确认推送）
 
 - ✅ 根 `.gitignore`：屏蔽 `.env` / `node_modules` / `.venv` / `backend/data/` / `*.db` /
-  `deploy/mock/raw/`（**真实学号 1120230636 + 姓名 + 课表已排除**）/ `*.log`
+  `deploy/mock/raw/`（**真实学号 1120xxxxxx + 姓名 + 课表已排除**）/ `*.log`
 - ✅ `LICENSE`（MIT，© 2026 左典典）
 - ✅ `SECURITY.md`：凭据模型（密码仅内存、不落盘）、已知边界、漏洞上报方式
 - ✅ `deploy/README.md`：本部署章节
@@ -262,7 +262,7 @@ nginx 默认读 `./certs`。小机型（1 核 1G）足够几百在校生。
 
 ```bash
 # 推送前自检（应无输出）
-grep -rIl "1120230636\|左典典" . --exclude-dir=node_modules --exclude-dir=.venv
+grep -rIl "1120xxxxxx\|你的姓名" . --exclude-dir=node_modules --exclude-dir=.venv
 # 确认 .env 未被跟踪
 git status --porcelain | grep -i "\.env$"   # 应为空
 ```
