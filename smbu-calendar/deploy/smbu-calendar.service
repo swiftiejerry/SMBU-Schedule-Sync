@@ -1,0 +1,17 @@
+[Unit]
+Description=SMBU Schedule Sync
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/smbu-calendar/backend
+ExecStart=/opt/smbu-calendar/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8770 --workers 2
+EnvironmentFile=/opt/smbu-calendar/backend/.env
+Restart=always
+RestartSec=3
+User=www-data
+# Kill any hung worker so the upstream gate can never leak.
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

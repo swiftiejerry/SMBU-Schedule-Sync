@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="SMBU course schedule to calendar — export your timetable as .ics" />
+    <title>SMBU Schedule Sync</title>
+    <script>
+      // Applied before first paint so the theme never flashes.
+      (function () {
+        try {
+          var stored = localStorage.getItem('smbu.theme') || 'auto'
+          var dark =
+            stored === 'dark' ||
+            (stored === 'auto' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          var el = document.documentElement
+          el.classList.toggle('dark', dark)
+          el.classList.toggle('light', !dark)
+          el.style.colorScheme = dark ? 'dark' : 'light'
+        } catch (e) {}
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

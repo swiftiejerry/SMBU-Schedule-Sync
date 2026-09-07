@@ -1,0 +1,8 @@
+# Test-only deps. requirements.txt stays production-lean so the runtime image
+# does not carry a test runner.
+#
+#   python -m pip install -r requirements-dev.txt
+#   pytest -q
+-r requirements.txt
+pytest==9.1.1
+pytest-asyncio==1.4.0

@@ -1,0 +1,35 @@
+# Keep the build context small and the image clean.
+# Without this, node_modules (82MB) and .venv (62MB) get sent to the daemon on
+# every build, and host-only artifacts leak into the image.
+
+# Dependencies — reinstalled inside the image from lockfiles
+**/node_modules
+**/.venv
+**/venv
+**/__pycache__
+**/*.pyc
+**/*.pyo
+
+# Host-only build output — the frontend is rebuilt from source in stage 1,
+# so a stale host dist must never be trusted.
+frontend/dist
+
+# Runtime state: never bake a database or temp files into an image
+backend/data
+backend/.tmp
+**/*.db
+**/*.sqlite3
+
+# Secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# VCS / scratch / docs
+**/.git
+**/.gitignore
+**/*.log
+_probe
+tests
+docs
+*.md
