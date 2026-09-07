@@ -1,0 +1,55 @@
+# 真身在 GitHub 远端（由 API 创建）；本地参考副本见 deploy/ci/deploy.workflow.yml。
+# 注意：本地修改本文件后 git push 需要带 workflow scope 的 token（gh CLI 已配置）。
+
+name: Deploy to Alibaba Cloud ECS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ecs
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 打包源码：git archive 只含已跟踪文件，天然排除 .git / node_modules /
+      # .env / _probe 等未跟踪或被忽略内容，口径与 .gitignore 一致
+      - name: Build source tarball
+        run: git archive --format=tar.gz -o smbu-src.tgz HEAD
+
+      - name: Upload tarball to ECS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: root
+          key: ${{ secrets.ECS_DEPLOY_KEY }}
+          source: smbu-src.tgz
+          target: /opt/smbu-src.tgz
+          overwrite: true
+
+      - name: Deploy on ECS (cert + build image + recreate containers)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: root
+          key: ${{ secrets.ECS_DEPLOY_KEY }}
+          script: |
+            set -e
+            rm -rf /opt/smbu-calendar
+            mkdir -p /opt/smbu-calendar
+            # 拍平后的仓库：tar 包内文件在顶层，直接解到目标目录（无 strip）
+            tar xzf /opt/smbu-src.tgz -C /opt/smbu-calendar
+            cd /opt/smbu-calendar
+            # deploy.sh 统一处理：阶段1 自签证书 + nginx.portal.conf（8443），
+            # 阶段2 加 LETSENCRYPT=1 走 Let's Encrypt + nginx.conf（443）。
+            # 直接调 deploy.sh 可避免 docker-compose 默认 NGINX_CONF=nginx.conf 的坑。
+            bash deploy/deploy.sh
+            docker image prune -f
