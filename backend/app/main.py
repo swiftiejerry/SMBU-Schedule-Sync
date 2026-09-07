@@ -345,7 +345,7 @@ async def login(payload: LoginRequest, request: Request) -> Response:
                             "AUTH_FAILED",
                             "CAS accepted but the portal rejected the session",
                         )
-                    return api_error(503, "UPSTREAM_ERROR", str(transport_error))
+                    return api_error(503, "UPSTREAM_ERROR", "academic portal temporarily unavailable")
                 return _auth_failed_response(auth_failure)
 
             if auth is None and auth_failure is not None:
@@ -368,7 +368,7 @@ async def login(payload: LoginRequest, request: Request) -> Response:
 
             if auth is None:
                 if transport_error is not None:
-                    return api_error(503, "UPSTREAM_ERROR", str(transport_error))
+                    return api_error(503, "UPSTREAM_ERROR", "academic portal temporarily unavailable")
                 return _auth_failed_response(auth_failure)
 
         # --- success ---------------------------------------------------------
@@ -400,7 +400,7 @@ async def login(payload: LoginRequest, request: Request) -> Response:
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception("unhandled login error")
-        return api_error(500, "INTERNAL", str(exc))
+        return api_error(500, "INTERNAL", "internal server error")
     finally:
         # The plaintext password must not outlive this call.
         payload.password = ""
@@ -434,7 +434,7 @@ async def list_terms(
         return api_error(401, "SESSION_EXPIRED", "session expired upstream")
     except Exception as exc:  # noqa: BLE001
         logger.warning("terms failed: %s", exc)
-        return api_error(502, "UPSTREAM_ERROR", str(exc))
+        return api_error(502, "UPSTREAM_ERROR", "academic portal temporarily unavailable")
 
     if not terms:
         return api_error(502, "NO_DATA", "portal returned no terms")
@@ -478,7 +478,7 @@ async def get_schedule(
         return api_error(401, "SESSION_EXPIRED", "session expired upstream")
     except Exception as exc:  # noqa: BLE001
         logger.warning("schedule failed: %s", exc)
-        return api_error(502, "UPSTREAM_ERROR", str(exc))
+        return api_error(502, "UPSTREAM_ERROR", "academic portal temporarily unavailable")
 
     warnings: List[str] = []
     if not schedule.weeks:
@@ -562,7 +562,7 @@ async def export_ics(
         return api_error(401, "SESSION_EXPIRED", "session expired upstream")
     except Exception as exc:  # noqa: BLE001
         logger.warning("export failed: %s", exc)
-        return api_error(502, "UPSTREAM_ERROR", str(exc))
+        return api_error(502, "UPSTREAM_ERROR", "academic portal temporarily unavailable")
 
     if not schedule.sections:
         schedule.sections = list(jwmod.DEFAULT_SECTIONS)
@@ -621,7 +621,11 @@ if settings.debug_raw_endpoint:
             try:
                 out[name] = await call_upstream(session, factory)
             except Exception as exc:  # noqa: BLE001
-                out[name] = {"error": str(exc)}
+                # Only the exception CLASS name reaches the client — the full
+                # message goes to the server log. Raw exception text in a
+                # response is an information-leak (CodeQL py/stack-trace-exposure).
+                logger.warning("debug/raw %s failed: %s", name, exc)
+                out[name] = {"error": type(exc).__name__}
         if term:
             for name, factory in (
                 ("termWeeks", lambda: jw._call("/api/home/getTermWeeks.do", {"xnxqdm": term}, "GET")),
@@ -637,7 +641,8 @@ if settings.debug_raw_endpoint:
                 try:
                     out[name] = await call_upstream(session, factory)
                 except Exception as exc:  # noqa: BLE001
-                    out[name] = {"error": str(exc)}
+                    logger.warning("debug/raw %s failed: %s", name, exc)
+                    out[name] = {"error": type(exc).__name__}
         return JSONResponse(out)
 
 
@@ -709,7 +714,8 @@ async def pay_callback(request: Request, body: Dict[str, str]) -> Response:
     try:
         ledger.mark_paid(order_id, trade_no, Channel.AGGREGATE)
     except PaymentError as exc:
-        return api_error(409, "ORDER_CONFLICT", str(exc))
+        logger.warning("payment mark_paid conflict for %s: %s", order_id, exc)
+        return api_error(409, "ORDER_CONFLICT", "order state conflict")
     return JSONResponse({"ok": True})
 
 
