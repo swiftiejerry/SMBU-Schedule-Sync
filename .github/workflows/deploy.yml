@@ -20,7 +20,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # ECS 入站公网带宽 ~0.25MB/s：首次冷构建（apt 系统库 + chromium 二进制，约 500MB）
+    # 需要 30-60 分钟；之后命中 docker 层缓存，常态 2-5 分钟。60 是上限保护非常态。
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,6 +50,8 @@ jobs:
           host: ${{ secrets.ECS_HOST }}
           username: root
           key: ${{ secrets.ECS_DEPLOY_KEY }}
+          # 默认 10m 会被首次冷构建掐死（run 34117732616 / 34118165121 的教训）
+          command_timeout: 60m
           script: |
             set -e
             rm -rf /opt/smbu-calendar
