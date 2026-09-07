@@ -23,7 +23,6 @@ backend/data/
 
 # Real captured 教务报文 (PII: student id, name, course schedule).
 # The mock server regenerates fixtures locally; do not ship these.
-smbu-calendar/deploy/mock/raw/
 deploy/mock/raw/
 
 # ===== _probe: 抓包/探针工作区（整目录排除）=====
@@ -32,7 +31,7 @@ deploy/mock/raw/
 #   raw/raw_*.json          -> 真实课表
 #   cj.txt / cj2.txt        -> 真实登录会话 Cookie (JSESSIONID / route token)
 #   cas.html / out/*.png    -> 真实登录页与截图
-# 压力测试结论已另存为 smbu-calendar/docs/STRESS_REPORT.md（已确认无 PII）。
+# 压力测试结论已另存为 docs/STRESS_REPORT.md（已确认无 PII）。
 _probe/
 # 兜底：任何位置都不允许提交 Cookie 文件与抓取产物
 *.txt.ck
@@ -52,7 +51,7 @@ build/
 
 # ===== Logs =====
 *.log
-smbu-calendar/deploy/proxy/proxy.log
+deploy/proxy/proxy.log
 
 # ===== OS / editor =====
 .DS_Store

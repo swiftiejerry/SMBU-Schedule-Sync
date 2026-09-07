@@ -23,14 +23,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 打包源码（剔除密钥 / PII / 巨型依赖；与本地 deploy 的 tarball 口径一致）
+      # 打包源码：git archive 只含已跟踪文件，天然排除 .git / node_modules /
+      # .env / _probe 等未跟踪或被忽略内容，口径与 .gitignore 一致
       - name: Build source tarball
-        run: |
-          tar czf smbu-src.tgz \
-            --exclude=node_modules --exclude=.venv --exclude='*.db' \
-            --exclude='.env' --exclude='.pytest_cache' --exclude='.tmp' \
-            --exclude='deploy/mock/raw' --exclude='_probe' \
-            -C . smbu-calendar
+        run: git archive --format=tar.gz -o smbu-src.tgz HEAD
 
       - name: Upload tarball to ECS
         uses: appleboy/scp-action@v0.1.7
@@ -52,7 +48,8 @@ jobs:
             set -e
             rm -rf /opt/smbu-calendar
             mkdir -p /opt/smbu-calendar
-            tar xzf /opt/smbu-src.tgz -C /opt/smbu-calendar --strip-components=1
+            # 拍平后的仓库：tar 包内文件在顶层，直接解到目标目录（无 strip）
+            tar xzf /opt/smbu-src.tgz -C /opt/smbu-calendar
             cd /opt/smbu-calendar
             # deploy.sh 统一处理：阶段1 自签证书 + nginx.portal.conf（8443），
             # 阶段2 加 LETSENCRYPT=1 走 Let's Encrypt + nginx.conf（443）。

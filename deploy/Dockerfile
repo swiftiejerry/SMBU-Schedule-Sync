@@ -1,4 +1,4 @@
-# Build from the project root (smbu-calendar/):
+# Build from the repo root (flattened layout: backend/ frontend/ deploy/ at top).
 #   docker build -f deploy/Dockerfile -t smbu-calendar:latest .
 #   docker run -d --name smbu -p 8770:8770 --env-file deploy/.env smbu-calendar:latest
 #

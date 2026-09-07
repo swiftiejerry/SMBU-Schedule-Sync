@@ -5,7 +5,7 @@
 ## 快速开始
 
 ```bash
-# 构建（在项目根 smbu-calendar/ 执行）
+# 构建（在仓库根执行，拍平后 backend/ frontend/ deploy/ 位于顶层）
 docker build -f deploy/Dockerfile -t smbu-calendar:latest .
 
 # 运行 —— 默认即连真实教务系统
